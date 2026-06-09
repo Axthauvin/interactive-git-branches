@@ -14,6 +14,7 @@ A very simple interactive branch switcher for Git repositories, to quickly switc
 
    ```bash
    cd gbs
+   chmod +x install.sh
    ./install.sh
    ```
 
