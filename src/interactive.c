@@ -53,8 +53,8 @@ void drawMenu(size_t selected, branches *branches, const char *title)
     int title_len = strlen(title);
     int lpad = (inner - title_len) / 2;
     int rpad = inner - title_len - lpad;
-    printf("\e[2;37m║\e[1;37m%*s%s%*s\e[2;37m║\e[0m\n", lpad, "", title, rpad,
-           "");
+    printf("\e[2;37m║\e[1;37m%*s\e[0;37m%s%*s\e[2;37m║\e[0m\n", lpad, "", title,
+           rpad, "");
     draw_hline(inner, "╠", "═", "╣");
 
     // options
@@ -68,12 +68,12 @@ void drawMenu(size_t selected, branches *branches, const char *title)
 
         if (i == selected)
         {
-            printf("\e[2;37m║ \e[1;96m▌ %s%*s\e[0;36m\e[2;37m║\e[0m\n",
+            printf("\e[2;37m║\e[0;37m \e[1;96m> %s%*s\e[0;36m\e[2;37m║\e[0m\n",
                    branches->branches[i].name, pad, "");
         }
         else
         {
-            printf("\e[2;37m║   \e[2;37m%s%*s\e[2;37m║\e[0m\n",
+            printf("\e[2;37m║   \e[0;37m%s%*s\e[2;37m║\e[0m\n",
                    branches->branches[i].name, pad, "");
         }
     }
@@ -84,7 +84,7 @@ void drawMenu(size_t selected, branches *branches, const char *title)
     printf("\e[2;37m║\e[2m%s%*s\e[2;37m║\e[0m\n", actions, inner - act_len, "");
     draw_hline(inner, "╚", "═", "╝");
 
-    printf("\n\e[2;37m ↑↓ navigate · Enter select · Esc quit\e[0m\n");
+    printf("\n\e[0;37m ↑↓ navigate · Enter select · Esc quit\e[0m\n");
 }
 
 void draw_search_bar(const char *query, struct branches *matches,
