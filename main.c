@@ -46,12 +46,12 @@ int main()
             {
                 switch (seq[1])
                 {
-                case 'A': // Flèche haut
+                case 'A': // Up arrow
                     if (selected > 0)
                         selected--;
                     break;
 
-                case 'B': // Flèche bas
+                case 'B': // Down arrow
                     if (selected < 2)
                         selected++;
                     break;

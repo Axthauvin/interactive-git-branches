@@ -45,6 +45,7 @@ char **getGitBranches()
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
+        line[strcspn(line, "\r\n")] = '\0';
         branches_count++;
         branches = (char **)realloc(branches, branches_count * sizeof(char *));
         branches[branches_count - 1] = strdup(line);
