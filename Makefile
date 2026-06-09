@@ -7,6 +7,7 @@ SRC = \
 	main.c \
 	src/git.c \
 	src/interactive.c \
+	src/popup.c \
 	src/search.c
 
 OBJ = $(SRC:.c=.o)

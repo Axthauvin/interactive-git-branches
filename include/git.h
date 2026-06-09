@@ -19,3 +19,11 @@ bool isGitRepository();
 branches *getGitBranches();
 
 bool gitSwitch(const char *branch);
+
+bool gitCreateBranch(const char *branch);
+
+bool gitDeleteBranch(const char *branch);
+
+const char *gitGetCurrentBranch();
+
+void freeGitBranches(branches *b);

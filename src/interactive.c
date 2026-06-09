@@ -43,6 +43,10 @@ static void draw_hline(int inner_w, const char *left, const char *fill,
 
 void drawMenu(size_t selected, branches *branches, const char *title)
 {
+    // current branch is always first
+    const char *current_branch =
+        (branches->count > 0) ? branches[0].branches[0].name : NULL;
+
     clearScreen();
 
     int total = get_term_width();
@@ -57,29 +61,46 @@ void drawMenu(size_t selected, branches *branches, const char *title)
            rpad, "");
     draw_hline(inner, "╠", "═", "╣");
 
-    // options
-    for (size_t i = 0; i < branches->count; i++)
+    if (!current_branch)
     {
-        int len = strlen(branches->branches[i].name);
-        int pad = inner - 3 - len;
-
-        if (pad < 0)
-            pad = 0;
-
-        if (i == selected)
+        printf("\e[2;37m║\e[0;37m No branches found in this repository "
+               "%*s\e[2;37m║\e[0m\n",
+               inner - 36, "");
+    }
+    else
+    {
+        // options
+        for (size_t i = 0; i < branches->count; i++)
         {
-            printf("\e[2;37m║\e[0;37m \e[1;96m> %s%*s\e[0;36m\e[2;37m║\e[0m\n",
-                   branches->branches[i].name, pad, "");
-        }
-        else
-        {
-            printf("\e[2;37m║   \e[0;37m%s%*s\e[2;37m║\e[0m\n",
-                   branches->branches[i].name, pad, "");
+            int len = strlen(branches->branches[i].name);
+            int pad = inner - 3 - len;
+
+            bool is_current =
+                strcmp(branches->branches[i].name, current_branch) == 0;
+            const char *marker = is_current ? " \e[2;37m(current)\e[0;37m" : "";
+
+            if (pad < 0)
+                pad = 0;
+
+            if (is_current)
+                pad -= 10; // account for "(current)"
+
+            if (i == selected)
+            {
+                printf("\e[2;37m║\e[0;37m \e[1;96m> "
+                       "%s%s%*s\e[0;36m\e[2;37m║\e[0m\n",
+                       branches->branches[i].name, marker, pad, "");
+            }
+            else
+            {
+                printf("\e[2;37m║   \e[0;37m%s%s%*s\e[2;37m║\e[0m\n",
+                       branches->branches[i].name, marker, pad, "");
+            }
         }
     }
 
     draw_hline(inner, "╠", "═", "╣");
-    const char *actions = "  [s] search   [n] new branch";
+    const char *actions = "  [s] search   [n] new branch   [d] delete branch";
     int act_len = strlen(actions);
     printf("\e[2;37m║\e[2m%s%*s\e[2;37m║\e[0m\n", actions, inner - act_len, "");
     draw_hline(inner, "╚", "═", "╝");

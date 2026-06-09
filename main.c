@@ -6,6 +6,7 @@
 
 #include "git.h"
 #include "interactive.h"
+#include "popup.h"
 #include "search.h"
 
 int main()
@@ -113,6 +114,78 @@ int main()
 
             update_matches(branches, &matches, "");
             draw_search_bar(search_query, &matches, selected);
+        }
+        else if (!in_search_mode && (c == 'n' || c == 'N'))
+        {
+            printf("\a"); // Bell sound to indicate we're in input mode
+            char *new_branch = popup_input("New branch name:");
+            if (new_branch)
+            {
+                if (strlen(new_branch) > 0)
+                {
+                    if (gitCreateBranch(new_branch))
+                    {
+                        // refresh branches list
+                        freeGitBranches(branches);
+                        branches = getGitBranches();
+                        free_matches(&matches);
+                        matches = make_matches(branches->count);
+                        update_matches(branches, &matches, "");
+                    }
+                }
+                free(new_branch);
+            }
+            drawMenu(selected, branches, "  git branch manager  ");
+        }
+        else if (!in_search_mode && (c == 'd' || c == 'D'))
+        {
+            if (branches->count > 0 && selected < branches->count)
+            {
+                char title[256];
+                snprintf(title, sizeof(title), "Delete branch '%s'?",
+                         branches->branches[selected].name);
+                int choice = popup_choice(title, "Yes", "Cancel");
+                if (choice == 1)
+                {
+                    if (gitDeleteBranch(branches->branches[selected].name))
+                    {
+                        freeGitBranches(branches);
+                        branches = getGitBranches();
+                        free_matches(&matches);
+                        matches = make_matches(branches->count);
+                        update_matches(branches, &matches, "");
+                        if (selected >= branches->count && selected > 0)
+                        {
+                            selected--;
+                        }
+                    }
+                    else
+                    {
+                        popup_message("Error",
+                                      "Failed to delete branch! Make sure it's "
+                                      "not the current branch and that it "
+                                      "doesn't have unmerged changes.");
+                    }
+                }
+            }
+            drawMenu(selected, branches, "  git branch manager  ");
+        }
+        else if (!in_search_mode
+                 && (c == 'i' || c == 'I')) // Info about the tool
+        {
+            clearScreen();
+            printf("\n\n\n\n");
+            printf("    \e[1;95mG\e[1;96mB\e[1;97mS\e[0m - \e[1;93mGit Branch "
+                   "Switcher\e[0m\n");
+            printf("    \e[2;37mA simple terminal tool to manage your git "
+                   "branches\e[0m\n");
+            printf("    \e[2;37mCreated by \e[1;94maxthauvin\e[0m\n");
+            printf("    \e[2;37mPlease go leave a star on GitHub: "
+                   "\e[1;94mhttps://github.com/axthauvin/gbs\e[0m ❤️\n");
+            printf("\n\n\n\n");
+            printf("\e[2;37mPress any key to return to the menu...\e[0m");
+            read(STDIN_FILENO, &c, 1);
+            drawMenu(selected, branches, "  git branch manager  ");
         }
         else if (in_search_mode) // type text in search mode
         {

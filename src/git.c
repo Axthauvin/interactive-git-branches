@@ -60,6 +60,26 @@ branches *getGitBranches()
     // Delete the temporary file
     remove(".branches");
 
+    // Put current branch at the top
+    const char *current_branch = gitGetCurrentBranch();
+
+    if (current_branch)
+    {
+        for (size_t i = 0; i < branches->count; i++)
+        {
+            if (strcmp(branches->branches[i].name, current_branch) == 0)
+            {
+                if (i > 0)
+                {
+                    char *temp = branches->branches[0].name;
+                    branches->branches[0].name = branches->branches[i].name;
+                    branches->branches[i].name = temp;
+                }
+                break;
+            }
+        }
+    }
+
     return branches;
 }
 
@@ -70,4 +90,61 @@ bool gitSwitch(const char *branch)
     int cr = system(command);
 
     return cr == 0;
+}
+
+bool gitCreateBranch(const char *branch)
+{
+    char command[256];
+    snprintf(command, sizeof(command), "git branch %s", branch);
+    int cr = system(command);
+
+    if (cr == 0)
+    {
+        return gitSwitch(branch);
+    }
+    return false;
+}
+
+bool gitDeleteBranch(const char *branch)
+{
+    char command[256];
+    snprintf(command, sizeof(command), "git branch -D %s > /dev/null 2>&1",
+             branch);
+    int cr = system(command);
+
+    return cr == 0;
+}
+
+const char *gitGetCurrentBranch()
+{
+    const char *command = "git branch --show-current";
+    FILE *fp = popen(command, "r");
+    if (!fp)
+        return NULL;
+
+    static char branch_name[256];
+    if (fgets(branch_name, sizeof(branch_name), fp) != NULL)
+    {
+        branch_name[strcspn(branch_name, "\r\n")] = '\0';
+        pclose(fp);
+        return branch_name;
+    }
+    pclose(fp);
+    return NULL;
+}
+
+void freeGitBranches(branches *b)
+{
+    if (b)
+    {
+        if (b->branches)
+        {
+            for (size_t i = 0; i < b->count; i++)
+            {
+                free(b->branches[i].name);
+            }
+            free(b->branches);
+        }
+        free(b);
+    }
 }
