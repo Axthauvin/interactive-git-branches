@@ -15,53 +15,59 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    getGitBranches();
+    char **branches = getGitBranches();
 
-    // struct termios orig_termios;
-    // enableRawMode(&orig_termios);
+    struct termios orig_termios;
+    enableRawMode(&orig_termios);
 
-    // int selected = 0;
-    // drawMenu(selected);
+    int selected = 0;
+    drawMenu(selected, branches);
 
-    // while (1)
-    // {
-    //     char c;
-    //     read(STDIN_FILENO, &c, 1);
+    while (1)
+    {
+        char c;
+        read(STDIN_FILENO, &c, 1);
 
-    //     if (c == '\033')
-    //     { // ESC
-    //         char seq[2];
-    //         read(STDIN_FILENO, &seq[0], 1);
-    //         read(STDIN_FILENO, &seq[1], 1);
+        if (c == '\033')
+        { // ESC
+            char seq[2];
+            read(STDIN_FILENO, &seq[0], 1);
+            read(STDIN_FILENO, &seq[1], 1);
 
-    //         if (seq[0] == '[')
-    //         {
-    //             switch (seq[1])
-    //             {
-    //             case 'A': // Flèche haut
-    //                 if (selected > 0)
-    //                     selected--;
-    //                 break;
+            if (seq[0] == '[')
+            {
+                switch (seq[1])
+                {
+                case 'A': // Flèche haut
+                    if (selected > 0)
+                        selected--;
+                    break;
 
-    //             case 'B': // Flèche bas
-    //                 if (selected < 2)
-    //                     selected++;
-    //                 break;
-    //             }
-    //         }
+                case 'B': // Flèche bas
+                    if (selected < 2)
+                        selected++;
+                    break;
+                }
+            }
 
-    //         drawMenu(selected);
-    //     }
+            drawMenu(selected, branches);
+        }
 
-    //     if (c == '\n' || c == '\r')
-    //     {
-    //         break;
-    //     }
-    // }
+        if (c == '\n' || c == '\r')
+        {
+            break;
+        }
+    }
 
-    // disableRawMode(&orig_termios);
+    disableRawMode(&orig_termios);
 
-    // printf("\nVous avez choisi l'option %d\n", selected + 1);
+    char *selected_branch = branches[selected];
+
+    if (!gitSwitch(selected_branch))
+    {
+        fprintf(stderr, "Failed to switch branch\n");
+        exit(EXIT_FAILURE);
+    }
 
     return 0;
 }

@@ -2,10 +2,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 bool isGitRepository()
 {
-    const char *command = "git remote -v";
+    const char *command = "git remote -v > /dev/null 2>&1";
     int cr = system(command);
 
     return cr == 0;
@@ -39,15 +40,32 @@ char **getGitBranches()
         return NULL;
     }
 
+    char **branches = NULL;
+    size_t branches_count = 0;
+
     while ((read = getline(&line, &len, fp)) != -1)
     {
-        printf("Retrieved line of length %zu:\n", read);
-        printf("%s", line);
+        branches_count++;
+        branches = (char **)realloc(branches, branches_count * sizeof(char *));
+        branches[branches_count - 1] = strdup(line);
     }
 
     fclose(fp);
     if (line)
         free(line);
 
-    return NULL;
+    // Delete the temporary file
+    remove(".branches");
+
+    return branches;
+}
+
+bool gitSwitch(const char *branch)
+{
+    char command[256];
+    snprintf(command, sizeof(command), "git switch %s > /dev/null 2>&1",
+             branch);
+    int cr = system(command);
+
+    return cr == 0;
 }

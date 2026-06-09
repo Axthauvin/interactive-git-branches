@@ -15,17 +15,15 @@ void disableRawMode(struct termios *orig_termios)
     tcsetattr(STDIN_FILENO, TCSAFLUSH, orig_termios);
 }
 
-void drawMenu(int selected)
+void drawMenu(int selected, char **options)
 {
-    const char *options[] = { "Option 1", "Option 2", "Option 3" };
-
-    printf("\033[H\033[J"); // Efface l'écran
+    printf("\033[H\033[J");
 
     for (int i = 0; i < 3; i++)
     {
         if (i == selected)
-            printf("> %s\n", options[i]);
+            printf("> %s", options[i]);
         else
-            printf("  %s\n", options[i]);
+            printf("  %s", options[i]);
     }
 }

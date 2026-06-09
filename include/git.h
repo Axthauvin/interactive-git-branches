@@ -6,4 +6,4 @@ bool isGitRepository();
 
 char **getGitBranches();
 
-bool gitSwitch();
+bool gitSwitch(const char *branch);
