@@ -1,7 +1,6 @@
 #include "interactive.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 
@@ -42,26 +41,12 @@ static void draw_hline(int inner_w, const char *left, const char *fill,
     printf("%s\e[0m\n", right);
 }
 
-static void draw_line(int inner_w, const char *prefix_ansi, const char *content,
-                      int content_len, const char *suffix_ansi,
-                      const char *suffix, int suffix_len)
-{
-    int pad = inner_w - content_len - suffix_len;
-    if (pad < 0)
-        pad = 0;
-    printf("\e[2;37m║%s%s", prefix_ansi, content);
-    printf("%*s", pad, "");
-    printf("%s%s\e[2;37m║\e[0m\n", suffix_ansi, suffix);
-}
-
-void drawMenu(int selected, branches *branches, const char *title)
+void drawMenu(size_t selected, branches *branches, const char *title)
 {
     clearScreen();
 
     int total = get_term_width();
     int inner = total - 2;
-
-    const int badge_w[] = { 9, 9, 5 };
 
     //  header
     draw_hline(inner, 0xE2808F ? "╔" : "+", "═", "╗");
@@ -73,7 +58,7 @@ void drawMenu(int selected, branches *branches, const char *title)
     draw_hline(inner, "╠", "═", "╣");
 
     // options
-    for (int i = 0; i < branches->count; i++)
+    for (size_t i = 0; i < branches->count; i++)
     {
         int len = strlen(branches->branches[i].name);
         int pad = inner - 3 - len;
@@ -102,8 +87,8 @@ void drawMenu(int selected, branches *branches, const char *title)
     printf("\n\e[2;37m ↑↓ navigate · Enter select · Esc quit\e[0m\n");
 }
 
-void draw_search_bar(const char *query, struct branches *branches,
-                     struct branches *matches, int selected)
+void draw_search_bar(const char *query, struct branches *matches,
+                     size_t selected)
 {
     clearScreen();
 
@@ -113,10 +98,12 @@ void draw_search_bar(const char *query, struct branches *branches,
     if (selected >= matches->count)
         selected = matches->count - 1;
 
-    if (selected < 0)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
+    if (selected < 0) // always unsigned --- IGNORE ---
         selected = 0;
 
-    char *title = "  search git branches  ";
+    const char *title = "  search git branches  ";
     if (strlen(query) > 0)
     {
         static char title_buf[256];

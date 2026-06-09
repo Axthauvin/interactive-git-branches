@@ -66,8 +66,7 @@ branches *getGitBranches()
 bool gitSwitch(const char *branch)
 {
     char command[256];
-    snprintf(command, sizeof(command), "git switch %s > /dev/null 2>&1",
-             branch);
+    snprintf(command, sizeof(command), "git switch %s", branch);
     int cr = system(command);
 
     return cr == 0;

@@ -17,7 +17,6 @@ int main()
     }
 
     branches *branches = getGitBranches();
-    size_t branches_count = branches->count;
 
     struct termios orig_termios;
     enableRawMode(&orig_termios);
@@ -33,7 +32,14 @@ int main()
     while (1)
     {
         char c;
-        read(STDIN_FILENO, &c, 1);
+        int res = read(STDIN_FILENO, &c, 1);
+        if (res < 0)
+        {
+            disableRawMode(&orig_termios);
+            clearScreen();
+            fprintf(stderr, "Error reading input\n");
+            exit(EXIT_FAILURE);
+        }
 
         if (c == '\033') // Escape sequence (Arrows or ESC)
         {
@@ -57,7 +63,14 @@ int main()
                 }
             }
 
-            read(STDIN_FILENO, &seq[1], 1);
+            int res = read(STDIN_FILENO, &seq[1], 1);
+            if (res < 0)
+            {
+                disableRawMode(&orig_termios);
+                clearScreen();
+                fprintf(stderr, "Error reading input\n");
+                exit(EXIT_FAILURE);
+            }
 
             if (seq[0] == '[')
             {
@@ -83,7 +96,7 @@ int main()
             if (!in_search_mode)
                 drawMenu(selected, branches, "  git branch manager  ");
             else
-                draw_search_bar(search_query, branches, &matches, selected);
+                draw_search_bar(search_query, &matches, selected);
         }
         else if (c == '\n' || c == '\r') // Touche Entrée
         {
@@ -99,11 +112,11 @@ int main()
             selected = 0;
 
             update_matches(branches, &matches, "");
-            draw_search_bar(search_query, branches, &matches, selected);
+            draw_search_bar(search_query, &matches, selected);
         }
         else if (in_search_mode) // type text in search mode
         {
-            int len = strlen(search_query);
+            size_t len = strlen(search_query);
 
             if (c == 127 || c == 8) // Backspace
             {
@@ -124,7 +137,7 @@ int main()
             update_matches(branches, &matches, search_query);
 
             selected = 0; // reset to the first match when query changes
-            draw_search_bar(search_query, branches, &matches, selected);
+            draw_search_bar(search_query, &matches, selected);
         }
     }
 
@@ -136,7 +149,6 @@ int main()
 
     if (!gitSwitch(selected_branch))
     {
-        fprintf(stderr, "Failed to switch branch\n");
         exit(EXIT_FAILURE);
     }
 
