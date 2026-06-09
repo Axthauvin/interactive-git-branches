@@ -43,7 +43,6 @@ static void draw_hline(int inner_w, const char *left, const char *fill,
 
 void drawMenu(size_t selected, branches *branches, const char *title)
 {
-    // current branch is always first
     const char *current_branch =
         (branches->count > 0) ? branches[0].branches[0].name : NULL;
 
@@ -52,7 +51,6 @@ void drawMenu(size_t selected, branches *branches, const char *title)
     int total = get_term_width();
     int inner = total - 2;
 
-    //  header
     draw_hline(inner, 0xE2808F ? "╔" : "+", "═", "╗");
     int title_len = strlen(title);
     int lpad = (inner - title_len) / 2;
@@ -69,7 +67,6 @@ void drawMenu(size_t selected, branches *branches, const char *title)
     }
     else
     {
-        // options
         for (size_t i = 0; i < branches->count; i++)
         {
             int len = strlen(branches->branches[i].name);
@@ -83,7 +80,7 @@ void drawMenu(size_t selected, branches *branches, const char *title)
                 pad = 0;
 
             if (is_current)
-                pad -= 10; // account for "(current)"
+                pad -= 10;
 
             if (i == selected)
             {
@@ -113,16 +110,8 @@ void draw_search_bar(const char *query, struct branches *matches,
 {
     clearScreen();
 
-    // `matches` is expected to be already filtered by `query`
-
-    // correct selected index if out of bounds
-    if (selected >= matches->count)
+    if (selected >= matches->count && matches->count > 0)
         selected = matches->count - 1;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"
-    if (selected < 0) // always unsigned --- IGNORE ---
-        selected = 0;
 
     const char *title = "  search git branches  ";
     if (strlen(query) > 0)

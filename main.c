@@ -1,6 +1,7 @@
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> // Nécessaire pour strlen() et strstr()
+#include <string.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -11,7 +12,6 @@
 
 int main()
 {
-    // First we check if its a git repo !
     if (!isGitRepository())
     {
         exit(EXIT_FAILURE);
@@ -42,13 +42,39 @@ int main()
             exit(EXIT_FAILURE);
         }
 
-        if (c == '\033') // Escape sequence (Arrows or ESC)
+        if (c == '\033')
         {
-            char seq[2];
-            if (read(STDIN_FILENO, &seq[0], 1) == 0 || seq[0] == 27)
+            struct pollfd pfd = { STDIN_FILENO, POLLIN, 0 };
+            if (poll(&pfd, 1, 50) > 0 && (pfd.revents & POLLIN))
             {
-                if (in_search_mode) // In search mode, ESC exits search and goes
-                                    // back to main menu
+                char seq[2];
+                if (read(STDIN_FILENO, &seq[0], 1) > 0 && seq[0] == '[')
+                {
+                    if (read(STDIN_FILENO, &seq[1], 1) > 0)
+                    {
+                        int current_max = in_search_mode ? matches.count - 1
+                                                         : branches->count - 1;
+
+                        switch (seq[1])
+                        {
+                        case 'A':
+                            if (selected > 0)
+                                selected--;
+                            break;
+
+                        case 'B':
+                            if (selected < current_max)
+                                selected++;
+                            else
+                                selected = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (in_search_mode)
                 {
                     in_search_mode = false;
                     search_query[0] = '\0';
@@ -56,41 +82,11 @@ int main()
                     drawMenu(selected, branches, "  git branch manager  ");
                     continue;
                 }
-                else // else, ESC exits the program
+                else
                 {
                     disableRawMode(&orig_termios);
                     clearScreen();
                     exit(EXIT_SUCCESS);
-                }
-            }
-
-            int res = read(STDIN_FILENO, &seq[1], 1);
-            if (res < 0)
-            {
-                disableRawMode(&orig_termios);
-                clearScreen();
-                fprintf(stderr, "Error reading input\n");
-                exit(EXIT_FAILURE);
-            }
-
-            if (seq[0] == '[')
-            {
-                int current_max =
-                    in_search_mode ? matches.count - 1 : branches->count - 1;
-
-                switch (seq[1])
-                {
-                case 'A': // Up arrow
-                    if (selected > 0)
-                        selected--;
-                    break;
-
-                case 'B': // Down arrow
-                    if (selected < current_max)
-                        selected++;
-                    else
-                        selected = 0; // Loop back to the top
-                    break;
                 }
             }
 
@@ -99,7 +95,7 @@ int main()
             else
                 draw_search_bar(search_query, &matches, selected);
         }
-        else if (c == '\n' || c == '\r') // Touche Entrée
+        else if (c == '\n' || c == '\r')
         {
             if (!in_search_mode || matches.count > 0)
             {
@@ -117,7 +113,7 @@ int main()
         }
         else if (!in_search_mode && (c == 'n' || c == 'N'))
         {
-            printf("\a"); // Bell sound to indicate we're in input mode
+            printf("\a");
             char *new_branch = popup_input("New branch name:");
             if (new_branch)
             {
@@ -125,7 +121,6 @@ int main()
                 {
                     if (gitCreateBranch(new_branch))
                     {
-                        // refresh branches list
                         freeGitBranches(branches);
                         branches = getGitBranches();
                         free_matches(&matches);
@@ -147,31 +142,61 @@ int main()
                 int choice = popup_choice(title, "Yes", "Cancel");
                 if (choice == 1)
                 {
-                    if (gitDeleteBranch(branches->branches[selected].name))
+                    bool proceed = true;
+                    const char *base_branches[] = { "main", "master",
+                                                    "dev",  "develop",
+                                                    "prod", "staging" };
+                    for (size_t i = 0;
+                         i < sizeof(base_branches) / sizeof(base_branches[0]);
+                         i++)
                     {
-                        freeGitBranches(branches);
-                        branches = getGitBranches();
-                        free_matches(&matches);
-                        matches = make_matches(branches->count);
-                        update_matches(branches, &matches, "");
-                        if (selected >= branches->count && selected > 0)
+                        if (strcmp(branches->branches[selected].name,
+                                   base_branches[i])
+                            == 0)
                         {
-                            selected--;
+                            char warn_title[256];
+                            snprintf(warn_title, sizeof(warn_title),
+                                     "WARNING: Delete base branch '%s'?",
+                                     base_branches[i]);
+                            int confirm =
+                                popup_choice(warn_title, "Delete", "Cancel");
+                            if (confirm != 1)
+                            {
+                                proceed = false;
+                            }
+                            break;
                         }
                     }
-                    else
+
+                    if (proceed)
                     {
-                        popup_message("Error",
-                                      "Failed to delete branch! Make sure it's "
-                                      "not the current branch and that it "
-                                      "doesn't have unmerged changes.");
+                        if (gitDeleteBranch(branches->branches[selected].name))
+                        {
+                            freeGitBranches(branches);
+                            branches = getGitBranches();
+                            free_matches(&matches);
+                            matches = make_matches(branches->count);
+                            update_matches(branches, &matches, "");
+                            if (selected >= branches->count && selected > 0)
+                            {
+                                selected--;
+                            }
+                        }
+                        else
+                        {
+                            popup_message(
+                                "Error",
+                                "Failed to delete branch! Make sure it's "
+                                "not the current branch and that it "
+                                "doesn't have unmerged changes.");
+                        }
                     }
                 }
             }
             drawMenu(selected, branches, "  git branch manager  ");
         }
         else if (!in_search_mode
-                 && (c == 'i' || c == 'I')) // Info about the tool
+                 && (c == 'i' || c == 'I'))
         {
             clearScreen();
             printf("\n\n\n\n");
@@ -187,11 +212,11 @@ int main()
             read(STDIN_FILENO, &c, 1);
             drawMenu(selected, branches, "  git branch manager  ");
         }
-        else if (in_search_mode) // type text in search mode
+        else if (in_search_mode)
         {
             size_t len = strlen(search_query);
 
-            if (c == 127 || c == 8) // Backspace
+            if (c == 127 || c == 8)
             {
                 if (len > 0)
                 {
@@ -209,7 +234,7 @@ int main()
 
             update_matches(branches, &matches, search_query);
 
-            selected = 0; // reset to the first match when query changes
+            selected = 0;
             draw_search_bar(search_query, &matches, selected);
         }
     }

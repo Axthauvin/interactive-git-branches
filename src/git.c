@@ -57,10 +57,8 @@ branches *getGitBranches()
     if (line)
         free(line);
 
-    // Delete the temporary file
     remove(".branches");
 
-    // Put current branch at the top
     const char *current_branch = gitGetCurrentBranch();
 
     if (current_branch)
