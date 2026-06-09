@@ -12,7 +12,7 @@ bool isGitRepository()
     return cr == 0;
 }
 
-char **getGitBranches()
+branches *getGitBranches()
 {
     const char *command = "git branch --format='%(refname:short)' > .branches";
     int cr = system(command);
@@ -40,15 +40,17 @@ char **getGitBranches()
         return NULL;
     }
 
-    char **branches = NULL;
-    size_t branches_count = 0;
+    branches *branches = (struct branches *)malloc(sizeof(struct branches));
+    branches->branches = NULL;
+    branches->count = 0;
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
         line[strcspn(line, "\r\n")] = '\0';
-        branches_count++;
-        branches = (char **)realloc(branches, branches_count * sizeof(char *));
-        branches[branches_count - 1] = strdup(line);
+        branches->count++;
+        branches->branches = (struct branch *)realloc(
+            branches->branches, branches->count * sizeof(struct branch));
+        branches->branches[branches->count - 1].name = strdup(line);
     }
 
     fclose(fp);

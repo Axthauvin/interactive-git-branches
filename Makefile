@@ -6,7 +6,8 @@ CXXFLAGS += -Iinclude
 SRC = \
 	main.c \
 	src/git.c \
-	src/interactive.c
+	src/interactive.c \
+	src/search.c
 
 OBJ = $(SRC:.c=.o)
 

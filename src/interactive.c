@@ -1,6 +1,7 @@
 #include "interactive.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 
@@ -53,7 +54,7 @@ static void draw_line(int inner_w, const char *prefix_ansi, const char *content,
     printf("%s%s\e[2;37m║\e[0m\n", suffix_ansi, suffix);
 }
 
-void drawMenu(int selected, char **options)
+void drawMenu(int selected, branches *branches, const char *title)
 {
     clearScreen();
 
@@ -64,7 +65,6 @@ void drawMenu(int selected, char **options)
 
     //  header
     draw_hline(inner, 0xE2808F ? "╔" : "+", "═", "╗");
-    const char *title = "  git branch manager  ";
     int title_len = strlen(title);
     int lpad = (inner - title_len) / 2;
     int rpad = inner - title_len - lpad;
@@ -73,9 +73,9 @@ void drawMenu(int selected, char **options)
     draw_hline(inner, "╠", "═", "╣");
 
     // options
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < branches->count; i++)
     {
-        int len = strlen(options[i]);
+        int len = strlen(branches->branches[i].name);
         int pad = inner - 3 - len;
 
         if (pad < 0)
@@ -84,12 +84,12 @@ void drawMenu(int selected, char **options)
         if (i == selected)
         {
             printf("\e[2;37m║ \e[1;96m▌ %s%*s\e[0;36m\e[2;37m║\e[0m\n",
-                   options[i], pad, "");
+                   branches->branches[i].name, pad, "");
         }
         else
         {
-            printf("\e[2;37m║   \e[2;37m%s%*s\e[2;37m║\e[0m\n", options[i], pad,
-                   "");
+            printf("\e[2;37m║   \e[2;37m%s%*s\e[2;37m║\e[0m\n",
+                   branches->branches[i].name, pad, "");
         }
     }
 
@@ -100,4 +100,29 @@ void drawMenu(int selected, char **options)
     draw_hline(inner, "╚", "═", "╝");
 
     printf("\n\e[2;37m ↑↓ navigate · Enter select · Esc quit\e[0m\n");
+}
+
+void draw_search_bar(const char *query, struct branches *branches,
+                     struct branches *matches, int selected)
+{
+    clearScreen();
+
+    // `matches` is expected to be already filtered by `query`
+
+    // correct selected index if out of bounds
+    if (selected >= matches->count)
+        selected = matches->count - 1;
+
+    if (selected < 0)
+        selected = 0;
+
+    char *title = "  search git branches  ";
+    if (strlen(query) > 0)
+    {
+        static char title_buf[256];
+        snprintf(title_buf, sizeof(title_buf), "  search: %s  ", query);
+        title = title_buf;
+    }
+
+    drawMenu(selected, matches, title);
 }
