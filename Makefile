@@ -11,7 +11,7 @@ SRC = \
 
 OBJ = $(SRC:.c=.o)
 
-TARGET = gbranch
+TARGET = gbs
 
 all: $(TARGET)
 
