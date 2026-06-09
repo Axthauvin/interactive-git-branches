@@ -32,6 +32,14 @@ int main()
         { // ESC
             char seq[2];
             read(STDIN_FILENO, &seq[0], 1);
+
+            if (seq[0] == 27) // Just ESC was pressed
+            {
+                disableRawMode(&orig_termios);
+                clearScreen();
+                exit(EXIT_SUCCESS);
+            }
+
             read(STDIN_FILENO, &seq[1], 1);
 
             if (seq[0] == '[')
@@ -60,6 +68,7 @@ int main()
     }
 
     disableRawMode(&orig_termios);
+    clearScreen();
 
     char *selected_branch = branches[selected];
 
