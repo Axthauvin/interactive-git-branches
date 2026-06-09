@@ -15,5 +15,5 @@ A very simple interactive branch switcher for Git repositories, to quickly switc
 
 # TODO
 
-- [ ] Be able to search for branches by typing their name
+- [x] Be able to search for branches by typing their name
 - [ ] Menu to create a new branch
