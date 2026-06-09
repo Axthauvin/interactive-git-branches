@@ -14,6 +14,7 @@ int main()
 {
     if (!isGitRepository())
     {
+        printf("\e[0;31mNot a git repository! \e[0;37m\n");
         exit(EXIT_FAILURE);
     }
 
@@ -134,7 +135,7 @@ int main()
         }
         else if (!in_search_mode && (c == 'd' || c == 'D'))
         {
-            if (branches->count > 0 && selected < branches->count)
+            if (branches->count > 0 && (size_t)selected < branches->count)
             {
                 char title[256];
                 snprintf(title, sizeof(title), "Delete branch '%s'?",
@@ -177,7 +178,8 @@ int main()
                             free_matches(&matches);
                             matches = make_matches(branches->count);
                             update_matches(branches, &matches, "");
-                            if (selected >= branches->count && selected > 0)
+                            if ((size_t)selected >= branches->count
+                                && selected > 0)
                             {
                                 selected--;
                             }
@@ -195,8 +197,7 @@ int main()
             }
             drawMenu(selected, branches, "  git branch manager  ");
         }
-        else if (!in_search_mode
-                 && (c == 'i' || c == 'I'))
+        else if (!in_search_mode && (c == 'i' || c == 'I'))
         {
             clearScreen();
             printf("\n\n\n\n");
@@ -209,8 +210,17 @@ int main()
                    "\e[1;94mhttps://github.com/axthauvin/gbs\e[0m ❤️\n");
             printf("\n\n\n\n");
             printf("\e[2;37mPress any key to return to the menu...\e[0m");
-            read(STDIN_FILENO, &c, 1);
-            drawMenu(selected, branches, "  git branch manager  ");
+            int ret = read(STDIN_FILENO, &c, 1);
+            if (ret > 0)
+            {
+                drawMenu(selected, branches, "  git branch manager  ");
+            }
+            else
+            {
+                disableRawMode(&orig_termios);
+                clearScreen();
+                exit(EXIT_SUCCESS);
+            }
         }
         else if (in_search_mode)
         {

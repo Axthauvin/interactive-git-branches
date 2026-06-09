@@ -61,9 +61,13 @@ void drawMenu(size_t selected, branches *branches, const char *title)
 
     if (!current_branch)
     {
-        printf("\e[2;37m║\e[0;37m No branches found in this repository "
-               "%*s\e[2;37m║\e[0m\n",
-               inner - 36, "");
+        const char *msg = "No branches found in this repository. You can "
+                          "create a new branch with the 'n' key.";
+        int msg_len = strlen(msg);
+        int pad = inner - msg_len - 1;
+        if (pad < 0)
+            pad = 0;
+        printf("\e[2;37m║\e[0;37m %s%*s\e[2;37m║\e[0m\n", msg, pad, "");
     }
     else
     {
