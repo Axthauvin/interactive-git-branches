@@ -1,37 +1,60 @@
-### Git Interactive Branch Switcher
+# Git Branch Switcher CLI
 
-A very simple interactive branch switcher for Git repositories, to quickly switch between branches without having to type the branch name.
+A very simple **CLI tool** for Git repositories that lets you switch between branches using an interactive interface.
 
-### How to install
+<p align="center">
+  <img src=".github/images/showcase.png" alt="GBS" width="800">
+</p>
+
+## Installation
 
 1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/Axthauvin/gbs
-   ```
+```bash
+git clone https://github.com/Axthauvin/gbs
+```
 
-2. Start the install script:
+2. Run the installation script:
 
-   ```bash
-   cd gbs
-   chmod +x install.sh
-   ./install.sh
-   ```
+```bash
+cd gbs
+chmod +x install.sh
+./install.sh
+```
 
-3. The program should now be available globally as `gbs`, and you can delete the cloned repository if you want.
+3. The command is now available globally:
 
-### Local development
+```bash
+gbs
+```
 
-1. Compile the program:
-   ```bash
-   make
-   ```
-2. Run the program in a Git repository:
-   ```bash
-   ./gbs
-   ```
+You can safely delete the cloned repository afterward.
 
-# TODO
+## Usage
 
-- [x] Be able to search for branches by typing their name
-- [ ] Menu to create a new branch
+Inside any Git repository:
+
+```bash
+gbs
+```
+
+Select a branch from the interactive menu and press **Enter** to switch to it.
+
+## Local Development
+
+Compile the project:
+
+```bash
+make
+```
+
+Run it locally:
+
+```bash
+./gbs
+```
+
+## TODO
+
+* [x] Search branches by typing their name
+* [ ] Interactive menu to create a new branch
